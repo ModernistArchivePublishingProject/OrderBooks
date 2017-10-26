@@ -7,6 +7,7 @@ Mike Widner <mikewidner@stanford.edu>
 import os
 import csv
 import sys
+import string
 import argparse
 import pandas as pd 
 
@@ -68,13 +69,40 @@ def subtract_returned_copies(df):
 	pass
 
 
-def write_work_puchaser_edges(df, outpath):
-	# TODO: Add header source, target, weight
-	df[['Title', 'Purchaser', 'Copies Ordered']].groupby(['Title', 'Purchaser']).sum().to_csv(outpath)
+# def write_work_puchaser_edges(df, outpath):
+# 	# TODO: Add header source, target, weight
+# 	df[['Title', 'Purchaser', 'Copies Ordered']].groupby(['Title', 'Purchaser']).sum().to_csv(outpath)
 
 
 def sum_pounds_shillings_pence(df):
 	pass
+
+
+def clean_purchaser_entries(df):
+	'''
+	Regularize entries for purchasers
+	'''
+	df = df.sample(n=500)
+	pattern = r",.+$"
+	df['Purchaser'] = df['Purchaser'].str.replace(pattern, '')
+	pattern = r"\([^)]+\)$|\[[^\]]+\]" # remove ()[] at end of entry
+	df['Purchaser'] = df['Purchaser'].str.replace(pattern, '')
+
+	pattern = r"Bk\.?"
+	df['Purchaser'] = df['Purchaser'].str.replace(pattern, 'Book')
+
+	remove_punc = str.maketrans('', '', string.punctuation.replace('&', ''))
+	df['Purchaser'] = df['Purchaser'].str.translate(remove_punc)
+	df['Purchaser'] = df['Purchaser'].str.strip()
+	return df
+
+
+def write_purchasers(df, outpath):
+	df['Purchaser'] = df['Purchaser'].astype(str)
+	df = clean_purchaser_entries(df)
+	with open(os.path.join(outpath, 'purchasers.txt'), 'w') as outfile:
+		for purchaser in sorted(df['Purchaser'].unique()):
+			outfile.write(str(purchaser) + "\n")
 
 
 def write_hand_date_ranges(df, outpath):
@@ -84,17 +112,32 @@ def write_hand_date_ranges(df, outpath):
 	pass
 
 
-def main():
-	options = parse_options()
-	check_output_path(options.output)
-	df = pd.read_csv(options.input, quoting=0, parse_dates=['Date Order Received', 'Date Order Fulfilled', 'Date Payment Received'], dayfirst=True)
+def load_dataframe(inputfile):
+	df = pd.read_csv(options.input, quoting=0, 
+		parse_dates=['Date Order Received', 'Date Order Fulfilled', 'Date Payment Received'], 
+		dayfirst=True)
 	fill_empties(df)
 	df = convert_dates(df)
 	df['Copies Ordered'].apply(pd.to_numeric, errors='raise')
+	return df
+
+def write_work_purchaser_edges(df, filename):
+	# TODO: Add header source, target, weight
+	df[['Title', 'Purchaser', 'Copies Ordered']].groupby(['Title', 'Purchaser']).sum().to_csv(outpath)
 	df_orders_by_year = df.groupby(df['Date Order Received'].dt.year)
 	for year, group in df_orders_by_year:
 		filename = 'work_purchaser_edges_' + str(int(year)) + '.csv'
-		write_work_puchaser_edges(group, os.path.join(options.output, filename))
+		group.groupby(['Title', 'Purchaser']).sum().to_csv(filename)
+
+def main():
+	options = parse_options()
+	check_output_path(options.output)
+	df = load_dataframe(options.input)
+
+	write_purchasers(df, options.output)
+	write_work_purchaser_edges(df, os.path.join(options.output, filename))
+
+
 
 
 if __name__ == '__main__':
