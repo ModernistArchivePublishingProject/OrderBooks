@@ -60,39 +60,41 @@ def find_crossrefs(df):
 	''' 
 	Traverse the cross-references given to figure out purchaser names
 	'''
-	# Find numbers in Purchaser field
+	
+	# Find cross reference numbers in Purchaser field
 	df['Cross Reference'] = df['Purchaser'].str.extract(r"^\(see (\d+)", flags=re.IGNORECASE, expand=False)
 	original = df.shape[0]
-	first_df = df
 	print('Original', original)
+	
 	# Group by title and author, because running total resets for each new title
 	grouped = df.groupby(['Title', 'Author'])
+	
 	# Now remove from the original dataframe all the rows we're going to update then re-add
 	df = df[df['Cross Reference'].isnull()] 
 	print('Stripped', df.shape[0])
-	print('diff', original - df.shape[0])
-	total = 0
 	for name, group in grouped:
-		# Get just the two columns we need new values for
-		values_df = group[group['Cross Reference'].isnull()]
-		values_df = values_df[['Purchaser', 'Running Total']]
-		# Now find all the rows with a cross reference value
-		refs_df = group[group['Cross Reference'].notnull()]
-		print('Before', name, refs_df.shape[0])
-		total += refs_df.shape[0]
+		# Return all rows with a cross reference value
+		refs = group[group['Cross Reference'].notnull()]
+		
+		# Drop all rows with cross reference values
+		values = group[group['Cross Reference'].isnull()]
+		# Get just the two columns for which we need new values
+		values = values[['Purchaser', 'Running Total']]
+
 		# Merge the two matching "Running Total" values with "Cross Reference" values
-		merged = refs_df.merge(values_df, how='inner', left_on='Cross Reference', right_on='Running Total')
+		merged = pd.merge(refs, values, how='inner', left_on='Cross Reference', right_on='Running Total', suffixes=('_left', '_right'))
+		
 		# Drop extraneous columns from the merge
-		merged.drop(['Purchaser_x', 'Running Total_y', 'Cross Reference'], axis=1, inplace=True)
+		merged.drop(['Purchaser_left', 'Running Total_right', 'Cross Reference'], axis=1, inplace=True)
+		
 		# Rename columns back to standard names
-		merged.rename(columns={'Purchaser_y': 'Purchaser', 'Running Total_x': 'Running Total'}, inplace=True)
+		merged.rename(columns={'Purchaser_right': 'Purchaser', 'Running Total_left': 'Running Total'}, inplace=True)
+		
 		# Now add back to our base dataframe
-		print('After', name, merged.shape[0])
 		df = df.append(merged)
-	print('total', total)
 	print('Final', df.shape[0])
 	print('Original', original)
-	print(original - df.shape[0])
+	print(df.shape[0] - original)
 	return df
 
 
