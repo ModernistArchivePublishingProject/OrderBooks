@@ -58,15 +58,45 @@ def convert_dates(df):
 
 def find_crossrefs(df):
 	''' 
-	Traverse the cross-references given to figure out empty dates 
+	Traverse the cross-references given to figure out purchaser names
 	'''
 	# Find numbers in Purchaser field
-	pattern = r"see (\d+)"
-	df['Cross Reference'] = df['Purchaser'].str.extract(pattern, flags=re.IGNORECASE, expand=True)
+	df['Cross Reference'] = df['Purchaser'].str.extract(r"^\(see (\d+)", flags=re.IGNORECASE, expand=False)
+	original = df.shape[0]
+	first_df = df
+	print('Original', original)
+	# Group by title and author, because running total resets for each new title
+	grouped = df.groupby(['Title', 'Author'])
+	# Now remove from the original dataframe all the rows we're going to update then re-add
+	df = df[df['Cross Reference'].isnull()] 
+	print('Stripped', df.shape[0])
+	print('diff', original - df.shape[0])
+	total = 0
+	for name, group in grouped:
+		# Get just the two columns we need new values for
+		values_df = group[group['Cross Reference'].isnull()]
+		values_df = values_df[['Purchaser', 'Running Total']]
+		# Now find all the rows with a cross reference value
+		refs_df = group[group['Cross Reference'].notnull()]
+		print('Before', name, refs_df.shape[0])
+		total += refs_df.shape[0]
+		# Merge the two matching "Running Total" values with "Cross Reference" values
+		merged = refs_df.merge(values_df, how='inner', left_on='Cross Reference', right_on='Running Total')
+		# Drop extraneous columns from the merge
+		merged.drop(['Purchaser_x', 'Running Total_y', 'Cross Reference'], axis=1, inplace=True)
+		# Rename columns back to standard names
+		merged.rename(columns={'Purchaser_y': 'Purchaser', 'Running Total_x': 'Running Total'}, inplace=True)
+		# Now add back to our base dataframe
+		print('After', name, merged.shape[0])
+		df = df.append(merged)
+	print('total', total)
+	print('Final', df.shape[0])
+	print('Original', original)
+	print(original - df.shape[0])
 	return df
 
 
-def subtract_returned_copies(df):
+def extract_returned_copies(df):
 	'''
 	Find purchasers with numbers in them and "retd" or ""
 	make the copies ordered a negative number
@@ -78,6 +108,12 @@ def subtract_returned_copies(df):
 	df['Copies Returned'] = df['Purchaser'].str.extract(pattern1, flags=re.IGNORECASE, expand=False)
 	df['Copies Returned'] = df['Purchaser'].str.extract(pattern2, flags=re.IGNORECASE, expand=False)
 	return df
+
+
+def subtract_returned_copies(df):
+	df = extract_returned_copies(df)
+	return df
+
 
 def sum_pounds_shillings_pence(df):
 	pass
@@ -140,7 +176,7 @@ def write_work_purchaser_edges(df, filename):
 def write_processed_data(df, infile, outpath):
 	basename = os.path.basename(infile)
 	(root, ext) = os.path.splitext(basename)
-	df.to_csv(os.path.join(outpath, root + '_processed' + ext))
+	df.sort_values(by=['Author', 'Title', 'Date Order Received']).to_csv(os.path.join(outpath, root + '_processed' + ext), index=False)
 
 
 def main():
@@ -149,7 +185,6 @@ def main():
 	df = load_dataframe(options.input)
 	df = find_crossrefs(df)
 	df = subtract_returned_copies(df)
-	# print(df[~df['Cross Reference'].isnull()].sample(n=100))
 	write_processed_data(df, options.input, options.output)
 
 	quit()
