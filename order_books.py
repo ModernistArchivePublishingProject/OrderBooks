@@ -90,6 +90,10 @@ def find_crossrefs(df):
 		# Rename columns back to standard names
 		merged.rename(columns={'Purchaser_right': 'Purchaser', 'Running Total_left': 'Running Total'}, inplace=True)
 		
+		if merged.shape[0] != refs.shape[0]:
+			merged_rows = merged.shape[0]
+			refs_rows = merged.shape[0]
+			print("\n\n{} does not match:\n----- MERGED -----\n{}\n------ REFS ------\n{}".format(name, merged[['Purchaser','Running Total']].head(merged_rows), refs[['Purchaser','Cross Reference']].head(refs_rows)))
 		# Now add back to our base dataframe
 		df = df.append(merged)
 	print('Final', df.shape[0])
