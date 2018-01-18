@@ -62,6 +62,8 @@ def find_crossrefs(df):
 	'''
 	
 	# Find cross reference numbers in Purchaser field
+	# BUG here?
+	# Need to look at more columns
 	df['Cross Reference'] = df['Purchaser'].str.extract(r"^\(see (\d+)", flags=re.IGNORECASE, expand=False)
 	original = df.shape[0]
 	print('Original', original)
@@ -78,6 +80,7 @@ def find_crossrefs(df):
 		
 		# Drop all rows with cross reference values
 		values = group[group['Cross Reference'].isnull()]
+		
 		# Get just the two columns for which we need new values
 		values = values[['Purchaser', 'Running Total']]
 
