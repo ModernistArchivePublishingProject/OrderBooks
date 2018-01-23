@@ -10,7 +10,8 @@ import csv
 import sys
 import string
 import argparse
-import pandas as pd 
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 def parse_options():
@@ -169,7 +170,7 @@ def load_dataframe(inputfile):
 		dayfirst=True)
 	fill_empties(df)
 	df = convert_dates(df)
-	df['Copies Ordered'].apply(pd.to_numeric, errors='raise')
+	df['Copies Ordered'].apply(pd.to_numeric, errors='coerce') #Changed do to an entry that is '1 [crossed out]' TODO clean copies order
 	return df
 
 
