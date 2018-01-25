@@ -20,9 +20,14 @@ df = pd.read_csv(inputfile, quoting=0,
 		dayfirst=True)
 #get unique book names
 titles = df['Title'].unique()
+print(titles)
 count = dict.fromkeys(titles,0)
 # Get sales count for each book titles
-# Get two dfs 
-
-
+# Get two dfs
+copies = {}
+df['Copies Ordered'].convert_objects(convert_numeric=True)
+#print(df['Copies Ordered'].sum())
+df.groupby(['Title'])[['Copies Ordered']].count().plot.bar(title = 'Number of Transactions per book')
+#counts.plot(kind='bar',title = 'Bar chart for book sales')
+plt.show()
 
