@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import collections
 import datetime
+import numpy as np
 
 
 #import csv, read in data frames, create arrays 
@@ -21,33 +22,39 @@ df = pd.read_csv(inputfile, quoting=0,
 		dayfirst=True)
 #get unique book names
 titles = df['Title'].unique()
-print(titles)
-count = dict.fromkeys(titles,0)
-# Get sales count for each book titles
-# Get two dfs
-copies = {}
+#print(titles)
 
-#df['Copies Ordered'].convert_objects(convert_numeric=True)
-#print(df['Copies Ordered'].sum())
-#df['Date Order Received'] = pd.to_datetime(df['Date Order Received'], errors = 'coerce',origin = pd.Timestamp('1920-01-01'))
-df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
-df['Pence'] = pd.to_numeric(df['Pence'], errors='coerce')
-df['Pounds'] = pd.to_numeric(df['Pounds'], errors='coerce')
-df['Shillings'] = pd.to_numeric(df['Shillings'], errors='coerce')
-df.fillna(0)
-nonull = df[df['Date Order Received'].notnull()]
-#money = nonull[['Pence','Pounds','Shillings']]
-#dates = nonull['Date Order Received']
+#Total Copies sold of each book
+def plotTotalSale(df):
+	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
+	df.groupby(['Title'])[['Copies Ordered']].sum().plot.bar(title = 'Number of Copies Sold')
+	plt.xlabel('Book Titles', fontsize = 10)
+	plt.ylabel('Copies Sold', fontsize = 10)
+	plt.show()
 
-#df.groupby(['Title'])[['Copies Ordered']].sum().plot.bar(title = 'Number of Transactions per book')
-#print (df.groupby(['Title', pd.Grouper(key='Date Order Received', freq='M')])[['Copies Ordered']].sum())
-#counts.plot(kind='bar',title = 'Bar chart for book sales')
-#plt.show()
-#Show income per month
-nonull = nonull[nonull['Date Order Received'] < datetime.date.today()  ]
-nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
-income = nonull.groupby([pd.Grouper(key='Date Order Received', freq='M')])[['Pence','Pounds','Shillings']].sum()
-print(income)
-#TODO, convert Pound, pence, Shillings into one unified unit
+#Income per month
+def computeIncome(df):
+	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
+	df['Pence'] = pd.to_numeric(df['Pence'], errors='coerce')
+	df['Pounds'] = pd.to_numeric(df['Pounds'], errors='coerce')
+	df['Shillings'] = pd.to_numeric(df['Shillings'], errors='coerce')
+	nonull = df[df['Date Order Received'].notnull()]
+	nonull = nonull[nonull['Date Order Received'] < datetime.date.today()  ]
+	nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
+	income = nonull.groupby([pd.Grouper(key='Date Order Received', freq='M')])[['Pence','Pounds','Shillings']].sum()
+	label =income.index.get_level_values('Date Order Received')
+	#Convert Pound, pence, Shillings into one unified unit
+	# 12 pence in a shilling and 20 shillings, or 240 pence, in a pound
+	income['total'] = income['Pounds'] + income['Pence']/240.0 + income['Shillings']/20.0
+	income['total'].plot.bar(title = 'Monthly Income')
+	index = np.arange(0,len(label),6)
+	label = label[0:len(label):6]
+	plt.xticks( index,label, fontsize=5, rotation=30)
+	plt.xlabel('Date', fontsize=10)
+	plt.ylabel('Pound', fontsize =10 )
+	plt.show()
 
+
+plotTotalSale(df)
+computeIncome(df)
 
