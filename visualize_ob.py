@@ -14,7 +14,6 @@ import collections
 import datetime
 import numpy as np
 
-
 #import csv, read in data frames, create arrays 
 inputfile = './output.csv/obeverything_processed.csv'
 df = pd.read_csv(inputfile, quoting=0, 
@@ -23,10 +22,13 @@ df = pd.read_csv(inputfile, quoting=0,
 #get unique book names
 titles = df['Title'].unique()
 #print(titles)
+df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
+df['Pence'] = pd.to_numeric(df['Pence'], errors='coerce')
+df['Pounds'] = pd.to_numeric(df['Pounds'], errors='coerce')
+df['Shillings'] = pd.to_numeric(df['Shillings'], errors='coerce')
 
 #Total Copies sold of each book
 def plotTotalSale(df):
-	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
 	plt.figure(0)
 	df.groupby(['Title'])[['Copies Ordered']].sum().plot.bar(title = 'Number of Copies Sold')
 	plt.xlabel('Book Titles', fontsize = 10)
@@ -35,10 +37,6 @@ def plotTotalSale(df):
 
 #Income per month
 def computeIncome(df):
-	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
-	df['Pence'] = pd.to_numeric(df['Pence'], errors='coerce')
-	df['Pounds'] = pd.to_numeric(df['Pounds'], errors='coerce')
-	df['Shillings'] = pd.to_numeric(df['Shillings'], errors='coerce')
 	nonull = df[df['Date Order Received'].notnull()]
 	nonull = nonull[nonull['Date Order Received'] < datetime.date.today()  ]
 	nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
@@ -57,12 +55,18 @@ def computeIncome(df):
 	#Add Cum sum income
 	plt.figure(2)
 	income['total'].cumsum().plot(title='Cumulative Income: 1927-1946')
-	#plt.xticks( index,labels, fontsize=5, rotation=30)
 	plt.xlabel('Date', fontsize=10)
 	plt.ylabel('Income (Pound)',  fontsize =10)
 	plt.show()
 
+#barchart for purchaser by volume
+def purchaserVolume(df):
+	plt.figure(3)
+	print(df.groupby(['Purchaser'])[['Copies Ordered']].sum())
+	#df.groupby(['Purchaser'])[['Copies Ordered']].sum().plot.pie(title = 'Copies sold by Purchaser')
+	plt.show()
 
-#plotTotalSale(df)
+plotTotalSale(df)
 computeIncome(df)
+purchaserVolume(df)
 
