@@ -33,6 +33,7 @@ def plotTotalSale(df):
 	df.groupby(['Title'])[['Copies Ordered']].sum().plot.bar(title = 'Number of Copies Sold')
 	plt.xlabel('Book Titles', fontsize = 10)
 	plt.ylabel('Copies Sold', fontsize = 10)
+	#plt.savefig('totalCopies.png')
 	plt.show()
 
 #Income per month
@@ -52,18 +53,26 @@ def computeIncome(df):
 	plt.xticks( index,label, fontsize=5, rotation=30)
 	plt.xlabel('Date', fontsize=10)
 	plt.ylabel('Income (Pound)',  fontsize =10)
+	#plt.savefig('monthlyincome.png')
 	#Add Cum sum income
-	plt.figure(2)
+	fig = plt.figure(2)
 	income['total'].cumsum().plot(title='Cumulative Income: 1927-1946')
 	plt.xlabel('Date', fontsize=10)
 	plt.ylabel('Income (Pound)',  fontsize =10)
+	#plt.savefig('cumsumIncome.png')
 	plt.show()
 
 #barchart for purchaser by volume
 def purchaserVolume(df):
-	plt.figure(3)
-	print(df.groupby(['Purchaser'])[['Copies Ordered']].sum())
-	#df.groupby(['Purchaser'])[['Copies Ordered']].sum().plot.pie(title = 'Copies sold by Purchaser')
+	THRESHOLD = 200.0
+	
+	volume = df.groupby(['Purchaser'])[['Copies Ordered']].sum()
+	volumebP = volume[volume >THRESHOLD]
+	volumebP =volumebP.dropna()
+	# plot chart
+	fig = plt.figure(3)
+	volumebP.plot.pie(y = 'Copies Ordered',labels = volumebP.index.get_level_values('Purchaser'), legend = False,  autopct='%1.1f%%')
+	#plt.savefig('volume.png')
 	plt.show()
 
 plotTotalSale(df)
