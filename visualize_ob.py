@@ -95,13 +95,18 @@ def purchaserVolume(df):
 
 #Chart showing average, min, and max time between order filled and payment received per work and total
 def diffFilledPayment(df):
+	#Found weird discrepancies in data: Date Payment received parsed incorrectly with dates not matching the spreadsheet
+	weirdEntries = df[df['Date Payment Received'] > datetime.datetime(1950,1,1)]
+	weirdEntries2 = df[df['Date Payment Received'] < datetime.datetime(1920,1,1)]
+	#Temoprarily ignore discrepancies
+	df = df[df['Date Payment Received'] < datetime.datetime(1950,1,1)]
+	df = df[df['Date Payment Received'] > datetime.datetime(1920,1,1)]
 	df['Date Order Fulfilled'] = pd.to_datetime(df['Date Order Fulfilled'])
 	df['Date Payment Received'] = pd.to_datetime(df['Date Payment Received'])
 	df['diff'] = df['Date Payment Received'] - df['Date Order Fulfilled']
-	print(df['diff'].describe())
-	print(df[df['diff'].max()== df['diff']])
-	#Found weird discrepancies in data: Date Payment received parsed incorrectly with dates not matching the spreadsheet
-	weirdEntries = df[df['Date Payment Received'] > datetime.datetime(1950,1,1)]
+	#print(df['diff'].describe())
+	print(df[df['diff'].min()== df['diff']])
+
 
 
 #plotTotalSale(df)
