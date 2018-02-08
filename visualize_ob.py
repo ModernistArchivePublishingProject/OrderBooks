@@ -35,10 +35,10 @@ def collapseTitles(df):
 #Total Copies sold of each book
 def plotTotalSale(df):
 	plt.figure(0)
-	df.groupby(['Title'])[['Copies Ordered']].sum().plot.bar(title = 'Number of Copies Sold')
-	plt.xlabel('Book Titles', fontsize = 10)
-	plt.ylabel('Copies Sold', fontsize = 10)
-	#plt.savefig('totalCopies.png')
+	df.groupby(['Title'])[['Copies Ordered']].sum().sort_values('Copies Ordered').plot.barh(title = 'Number of Copies Sold')
+	plt.ylabel('Book Titles', fontsize = 10)
+	plt.xlabel('Copies Sold', fontsize = 10)
+	#plt.savefig('totalCopies.png', bbox_inches='tight',dpi=100)
 	plt.show()
 
 #Income per month
@@ -58,13 +58,14 @@ def computeIncome(df):
 	plt.xticks( index,label, fontsize=5, rotation=30)
 	plt.xlabel('Date', fontsize=10)
 	plt.ylabel('Income (Pound)',  fontsize =10)
-	#plt.savefig('monthlyincome.png')
+	#plt.savefig('monthlyincome.png', bbox_inches='tight',dpi=100)
+	
 	#Add Cum sum income
 	fig = plt.figure(2)
 	income['total'].cumsum().plot(title='Cumulative Income: 1927-1946')
 	plt.xlabel('Date', fontsize=10)
 	plt.ylabel('Income (Pound)',  fontsize =10)
-	#plt.savefig('cumsumIncome.png')
+	#plt.savefig('cumsumIncome.png', bbox_inches='tight',dpi=100)
 	
 	#stacked bar charts for total income per month and per year showing which work contributes the most
 	fig = plt.figure(3)
@@ -83,14 +84,14 @@ def computeIncome(df):
 #barchart for purchaser by volume
 def purchaserVolume(df):
 	THRESHOLD = 200.0
-	
-	volume = df.groupby(['Purchaser'])[['Copies Ordered']].sum()
+	volume = df.groupby(['Purchaser'])[['Copies Ordered']].sum().sort_values('Copies Ordered')
 	volumebP = volume[volume >THRESHOLD]
 	volumebP =volumebP.dropna()
 	# plot chart
 	fig = plt.figure(4)
-	volumebP.plot.pie(y = 'Copies Ordered',labels = volumebP.index.get_level_values('Purchaser'), legend = False,  autopct='%1.1f%%')
-	#plt.savefig('volume.png')
+	volumebP.plot.barh(title = 'Purcharser by volume')
+	plt.yticks( fontsize=5)
+	plt.savefig('volume.png', bbox_inches='tight',dpi=100)
 	plt.show()
 
 #Chart showing average, min, and max time between order filled and payment received per work and total
@@ -107,10 +108,38 @@ def diffFilledPayment(df):
 	#print(df['diff'].describe())
 	print(df[df['diff'].min()== df['diff']])
 
+#Finding discrepancies in the data frame, mostly in date field
+#Generates error report
+def detectAnomalies(df):
+	print("Finding Discrepancies....")
+	print("Checking for abnormal dates in entries")
+	weirdEntries = df[df['Date Payment Received'] > datetime.datetime(1950,1,1)]
+	weirdEntries2 = df[df['Date Payment Received'] < datetime.datetime(1920,1,1)]
+	print("Error in Date Payment Received")
+	print(weirdEntries)
+	print(weirdEntries2)
+
+	weirdEntries3= df[df['Date Order Received'] < datetime.datetime(1920,1,1)]
+	weirdEntries4= df[df['Date Order Received']  > datetime.datetime(1950,1,1)]
+	print("Error in Date Order Received")
+	print(weirdEntries3)
+	print(weirdEntries4)
+
+	#weirdEntries5 = df[df['Date Order Fulfilled'] < datetime.datetime(1920,1,1)]
+	#weirdEntries6= df[df['Date Order Fulfilled']  > datetime.datetime(1950,1,1)]
+	print("Error in Date Order Fufilled")
+	#print(weirdEntries5)
+	#print(weirdEntries6)
+	frames =  [weirdEntries, weirdEntries2, weirdEntries3, weirdEntries4]
+	output = pd.concat(frames)
+	output.to_csv('errorReport.csv')
+
+
 
 
 #plotTotalSale(df)
 #computeIncome(df)
 #purchaserVolume(df)
-diffFilledPayment(df)
+#diffFilledPayment(df)
+detectAnomalies(df)
 
