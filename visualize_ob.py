@@ -48,11 +48,15 @@ def computeIncome(df):
 	nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
 	income = nonull.groupby([pd.Grouper(key='Date Order Received', freq='M')])[['Pence','Pounds','Shillings']].sum()
 	labels =income.index.get_level_values('Date Order Received')
+	incomeY = nonull.groupby([pd.Grouper(key='Date Order Received', freq='Y')])[['Pence','Pounds','Shillings']].sum()
 	#Convert Pound, pence, Shillings into one unified unit
 	# 12 pence in a shilling and 20 shillings, or 240 pence, in a pound
 	income['total'] = income['Pounds'] + income['Pence']/240.0 + income['Shillings']/20.0
+	incomeY['total'] = incomeY['Pounds'] + incomeY['Pence']/240.0 + incomeY['Shillings']/20.0
 	plt.figure(1)
-	income['total'].plot.bar(title = 'Monthly Income')
+	ax = income['total'].plot.bar(title = 'Income')
+	incomeY['total'].plot.bar(ax = ax)
+	
 	index = np.arange(0,len(labels),6)
 	label = labels[0:len(labels):6]
 	plt.xticks( index,label, fontsize=5, rotation=30)
@@ -138,8 +142,8 @@ def detectAnomalies(df):
 
 
 #plotTotalSale(df)
-#computeIncome(df)
+computeIncome(df)
 #purchaserVolume(df)
 #diffFilledPayment(df)
-detectAnomalies(df)
+#detectAnomalies(df)
 
