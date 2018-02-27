@@ -158,11 +158,28 @@ def groupByMarking(df):
 	#describ.to_csv('groupByMarkingReport.csv')
 
 
+def bookpurchaserVolume(df):
+	THRESHOLD = 1
+	titles = df['Title'].unique()
+	for title in titles:
+		print(title)
+		volume = df[df['Title'] == title].groupby(['Purchaser'])[['Copies Ordered']].sum().sort_values('Copies Ordered')
+		volumebP = volume[volume >THRESHOLD]
+		volumebP =volumebP.dropna()
+		# plot chart
+		fig = plt.figure()
+		if not volumebP.empty:
+			volumebP.plot.barh(title = title +": "+ 'Purcharser by volume')
+			plt.yticks( fontsize=5)
+			plt.savefig(title+'volume.png', bbox_inches='tight',dpi=100)
+	plt.show()
+
 
 #plotTotalSale(df)
 #computeIncome(df)
 #purchaserVolume(df)
 #diffFilledPayment(df)
 #detectAnomalies(df)
-groupByMarking(df)
+#groupByMarking(df)
+bookpurchaserVolume(df)
 
