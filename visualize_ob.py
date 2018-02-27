@@ -150,8 +150,12 @@ def groupByMarking(df):
 	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
 	df['total'] = pd.to_numeric(df['total'], errors='coerce')
 	df['average'] = df['total'].div(df['Copies Ordered'],fill_value = None)
-	describ = df.groupby(['Title', 'Code / Notes'])['average'].describe()
-	describ.to_csv('groupByMarkingReport.csv')
+	df = df[df['average'] != float('Inf')]
+	describ = df.groupby(['Title'])['average'].describe()
+	print (describ)
+	describ.to_csv('groupByTitleReport.csv')
+	#describ = df.groupby(['Title', 'Code / Notes'])['average'].describe()
+	#describ.to_csv('groupByMarkingReport.csv')
 
 
 

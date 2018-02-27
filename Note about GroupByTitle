@@ -1,0 +1,5 @@
+Note about GroupByTitle
+
+There are fields that are inf. which means there are NaN or 0s created in the coerce prosess.
+Need to take a look at the data 
+Ignored Infs, by ignoring entries with Inf mean price 
