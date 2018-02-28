@@ -164,22 +164,47 @@ def bookpurchaserVolume(df):
 	for title in titles:
 		print(title)
 		volume = df[df['Title'] == title].groupby(['Purchaser'])[['Copies Ordered']].sum().sort_values('Copies Ordered')
+		
 		volumebP = volume[volume >THRESHOLD]
 		volumebP =volumebP.dropna()
 		# plot chart
-		fig = plt.figure()
 		if not volumebP.empty:
-			volumebP.plot.barh(title = title +": "+ 'Purcharser by volume')
+			volumebP[:min(200, len(volumebP.index))].to_csv("./bookVolumeReports/"+title+'bookPurchaserVolumebybook.csv')
+		'''if not volumebP.empty:
+			volumebP[:min(150, len(volumebP.index))].plot.barh(title = title +": "+ 'Purcharser by volume')
 			plt.yticks( fontsize=5)
-			plt.savefig(title+'volume.png', bbox_inches='tight',dpi=100)
-	plt.show()
-
-
+			plt.savefig("./VBB2/"+title+'volume.png', bbox_inches='tight',dpi=100)'''
+	#plt.show()
+def incomeByYear(df):
+	nonull = df[df['Date Order Received'].notnull()]
+	
+	nonull = nonull[nonull['Date Order Received'] < datetime.date.today()  ]
+	nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
+	maxYear = nonull['Date Order Received'].max().year
+	minYear= nonull['Date Order Received'].min().year
+	for year in range(minYear, maxYear+1):
+		income = nonull[nonull['Date Order Received'].dt.year== year].groupby([pd.Grouper(key='Date Order Received', freq='M')])[['Pence','Pounds','Shillings']].sum()
+		labels =income.index.get_level_values('Date Order Received').strftime('%m/%d/%Y')
+		income['total'] = income['Pounds'] + income['Pence']/240.0 + income['Shillings']/20.0
+		fig = plt.figure()
+		fig.add_subplot(111)
+		ax = income['total'].plot.bar(title = str(year) +' Monthly Income',color = 'red')
+		#income['total'].cumsum().plot(ax = ax, xticks = labels)
+		index = np.arange(0,len(labels),1)
+		label = labels[0:len(labels):1]
+		plt.xticks( index,label, fontsize=10, rotation=30)
+		myFmt = mdates.DateFormatter('%d')
+		#ax.xaxis.set_major_formatter(myFmt)
+		plt.xlabel('Date', fontsize=10)
+		plt.ylabel('Income (Pound)',  fontsize = 10)
+		plt.savefig('./yearlyincome/'+str(year)+'yearlyincome.png', bbox_inches='tight',dpi=100)
+#plt.show()
 #plotTotalSale(df)
 #computeIncome(df)
 #purchaserVolume(df)
 #diffFilledPayment(df)
 #detectAnomalies(df)
 #groupByMarking(df)
-bookpurchaserVolume(df)
+#bookpurchaserVolume(df)
+incomeByYear(df)
 
