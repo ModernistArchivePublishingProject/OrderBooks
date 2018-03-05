@@ -166,12 +166,12 @@ def bookpurchaserVolume(df):
 		volumebP = volume[volume >THRESHOLD]
 		volumebP =volumebP.dropna()
 		# plot chart
-		if not volumebP.empty:
-			volumebP[:min(200, len(volumebP.index))].to_csv("./bookVolumeReports/"+title+'bookPurchaserVolumebybook.csv')
 		'''if not volumebP.empty:
+			volumebP[:min(200, len(volumebP.index))].to_csv("./bookVolumeReports/"+title+'bookPurchaserVolumebybook.csv')'''
+		if not volumebP.empty:
 			volumebP[:min(150, len(volumebP.index))].plot.barh(title = title +": "+ 'Purcharser by volume')
-			plt.yticks( fontsize=5)
-			plt.savefig("./VBB2/"+title+'volume.png', bbox_inches='tight',dpi=100)'''
+			#plt.yticks( fontsize=5)
+			plt.savefig("./volumebybookpurchaser/"+title+'volume.png', bbox_inches='tight',dpi=100)
 	#plt.show()
 
 #Plot each individual year as an individual plot and show the income by month
@@ -227,7 +227,7 @@ def plotSaleByYearAuthor(df):
 #diffFilledPayment(df)
 #detectAnomalies(df)
 #groupByMarking(df)
-#bookpurchaserVolume(df)
+bookpurchaserVolume(df)
 #incomeByYear(df)
-plotSaleByYearAuthor(df)
+#plotSaleByYearAuthor(df)
 
