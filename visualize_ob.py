@@ -144,8 +144,6 @@ def detectAnomalies(df):
 
 #Tabular data with mean and max price for a book wrt to its marking
 def groupByMarking(df):
-	
-	
 	df['total'] = df['Pounds'] + df['Pence']/240.0 + df['Shillings']/20.0
 	df['Copies Ordered'] = pd.to_numeric(df['Copies Ordered'], errors='coerce')
 	df['total'] = pd.to_numeric(df['total'], errors='coerce')
@@ -157,7 +155,7 @@ def groupByMarking(df):
 	#describ = df.groupby(['Title', 'Code / Notes'])['average'].describe()
 	#describ.to_csv('groupByMarkingReport.csv')
 
-
+#For each book generate report of the number of volumes bought by each purchaser
 def bookpurchaserVolume(df):
 	THRESHOLD = 1
 	titles = df['Title'].unique()
@@ -175,6 +173,8 @@ def bookpurchaserVolume(df):
 			plt.yticks( fontsize=5)
 			plt.savefig("./VBB2/"+title+'volume.png', bbox_inches='tight',dpi=100)'''
 	#plt.show()
+
+#Plot each individual year as an individual plot and show the income by month
 def incomeByYear(df):
 	nonull = df[df['Date Order Received'].notnull()]
 	
@@ -198,6 +198,28 @@ def incomeByYear(df):
 		plt.xlabel('Date', fontsize=10)
 		plt.ylabel('Income (Pound)',  fontsize = 10)
 		plt.savefig('./yearlyincome/'+str(year)+'yearlyincome.png', bbox_inches='tight',dpi=100)
+
+#sales chart for each year and author
+def plotSaleByYearAuthor(df):
+	nonull = df[df['Date Order Received'].notnull()]
+	nonull = nonull[nonull['Date Order Received'] < datetime.date.today()  ]
+	nonull = nonull[nonull['Date Order Received']  > datetime.datetime(1910,1,1)]
+	maxYear = nonull['Date Order Received'].max().year
+	minYear= nonull['Date Order Received'].min().year
+	authors = df['Author'].unique()
+	for author in authors:
+		dfAuthor= nonull[nonull['Author'] == author]
+		for year in range(minYear, maxYear+1):
+			dfYAuthor = dfAuthor[dfAuthor['Date Order Received'].dt.year == year]
+			data = dfYAuthor.groupby(['Title'])[['Copies Ordered']].sum().sort_values('Copies Ordered')
+			if not data.empty:
+				print(year,author)
+				data.plot.barh(title = author +" "+ str(year) + "Number of books sold")
+				plt.ylabel('Book Titles', fontsize = 10)
+				plt.xlabel('Copies Sold', fontsize = 10)
+				plt.savefig("./saleyearauthor/"+author + str(year)+"bookcopies.png", bbox_inches='tight',dpi=100)
+
+
 #plt.show()
 #plotTotalSale(df)
 #computeIncome(df)
@@ -206,5 +228,6 @@ def incomeByYear(df):
 #detectAnomalies(df)
 #groupByMarking(df)
 #bookpurchaserVolume(df)
-incomeByYear(df)
+#incomeByYear(df)
+plotSaleByYearAuthor(df)
 
